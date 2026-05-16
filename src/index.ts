@@ -5274,7 +5274,7 @@ async function detectLegacyContainers() {
 const plugin = {
   id: "agent-searchkit",
   name: "Agent Searchkit",
-  description: "Local-first research tools for SearXNG search, checkpointed research runs, and page extraction.",
+  description: "Local-first research tools for SearXNG search, research runs with saved results, and page extraction.",
   configSchema: {
     type: "object",
     additionalProperties: false,
@@ -5434,7 +5434,7 @@ const plugin = {
 
     api.registerTool({
       name: "web_searchkit_research",
-      description: "Run a checkpointed local research search and save search.json + report.md under services/agent-searchkit/runs/.",
+      description: "Run a local research search and save search.json + report.md under services/agent-searchkit/runs/.",
       parameters: {
         type: "object",
         additionalProperties: false,

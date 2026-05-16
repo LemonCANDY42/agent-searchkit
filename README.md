@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>为 AI Agent 打造的本地搜索基础设施</strong><br>
-  多引擎聚合 · 7 级 reranking · 断点续传研究 · 数据不出本机
+  多引擎聚合 · 7 级 reranking · 数据不出本机
 </p>
 
 <p align="center">
@@ -24,12 +24,11 @@
 
 ## ✨ Highlights
 
-- 🔍 **四大搜索工具** — search / research / extract / status
 - 📊 **7 级 Reranking** — 从原始排序到实体感知，渐进优化
-- 🔄 **断点续传研究** — 长任务自动 checkpoint，不怕中断
-- 📎 **引用注释** — 可选输出 `[1] [2] ...` 标准引用格式
 - 🌐 **四引擎聚合** — Google + Bing + DuckDuckGo + Qwant 同时搜
 - 🔒 **完全本地** — 查询永不出本机，零遥测，无需 API Key
+- 📎 **引用注释** — 可选输出 `[1] [2] ...` 标准引用格式
+- 🔍 **搜索 + 提取 + 研究** — search / extract / research / status 四个工具
 - 🔌 **即插即用** — 原生支持 OpenClaw / MCP / LangChain / CrewAI
 
 ---
@@ -97,7 +96,7 @@ cd agent-searchkit/services && cp .env.example .env.local && ./manage.sh up
 </tr>
 <tr>
   <td>💰 <b>费用</b></td>
-  <td>✅ 永久免费</td>
+  <td>✅ 免费，无限制</td>
   <td>2K/月后 $3/千次</td>
   <td>100次/天</td>
   <td>免费但限速</td>
@@ -105,9 +104,9 @@ cd agent-searchkit/services && cp .env.example .env.local && ./manage.sh up
 <tr>
   <td>🌐 <b>多引擎聚合</b></td>
   <td>✅ 4 引擎同时搜</td>
-  <td>❌ 仅 Brave</td>
-  <td>❌ 仅 Google</td>
-  <td>❌ 仅 DDG</td>
+  <td>仅 Brave</td>
+  <td>仅 Google</td>
+  <td>仅 DDG</td>
 </tr>
 <tr>
   <td>🔒 <b>数据隐私</b></td>
@@ -132,7 +131,7 @@ cd agent-searchkit/services && cp .env.example .env.local && ./manage.sh up
 </tr>
 <tr>
   <td>📝 <b>研究流水线</b></td>
-  <td>✅ 断点续传</td>
+  <td>✅ 结果自动保存</td>
   <td>❌</td>
   <td>❌</td>
   <td>❌</td>
@@ -148,7 +147,7 @@ cd agent-searchkit/services && cp .env.example .env.local && ./manage.sh up
 | Tool | 能力 | 说明 |
 |------|------|------|
 | `web_searchkit_search` | SearXNG 搜索 + 多版本 rerank | 核心搜索入口 |
-| `web_searchkit_research` | 断点续传式深度研究 | 长任务自动 checkpoint |
+| `web_searchkit_research` | 搜索并保存结果到本地 | 产出 search.json + report.md |
 | `web_searchkit_extract` | 网页提取 (fetch + Playwright) | 支持 JS 渲染页面 |
 | `web_searchkit_status` | 健康检查 | 栈状态检查 |
 
@@ -268,7 +267,7 @@ class WebSearchTool(BaseTool):
             │   agent-searchkit    │
             │   ┌──────────────┐  │
             │   │ search       │  │   ← 7 级 rerank
-            │   │ research     │  │   ← 断点续传
+            │   │ research     │  │   ← 结果保存到本地
             │   │ extract      │  │   ← Playwright fallback
             │   │ status       │  │   ← 健康检查
             │   └──────────────┘  │

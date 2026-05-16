@@ -54,4 +54,4 @@ Local notification bus for research-run progress updates. Not required for core 
 4. Rerank pipeline scores and reorders results
 5. Normalized results returned to agent
 
-For research runs, steps 1-5 repeat with query variations, and all results are checkpointed to disk.
+For research runs, steps 1-5 repeat with query variations, and all results are saved to disk.

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ $# -lt 2 ]]; then
+  echo "usage: ntfy-send <topic> <message>" >&2
+  exit 1
+fi
+topic="$1"
+shift
+msg="$*"
+curl -fsS -H "Title: OpenClaw" -d "$msg" "http://127.0.0.1:18082/${topic}"

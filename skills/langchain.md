@@ -47,7 +47,7 @@ def local_search(query: str, limit: int = 8, mode: str = "auto") -> list[dict]:
     return json.loads(result.stdout)
 
 def local_research(query: str, limit: int = 12) -> str:
-    """Run a checkpointed research session."""
+    """Run a research session and save results to disk."""
     result = subprocess.run(
         [
             f"{WEB_SEARCHER_PATH}/bin/research-run",
@@ -76,7 +76,7 @@ research_tool = Tool(
     name="local_research",
     func=local_research,
     description=(
-        "Run a deep research session with checkpointed output. "
+        "Run a deep research session and save results to disk. "
         "Input: research query string. "
         "Returns: markdown report."
     ),
