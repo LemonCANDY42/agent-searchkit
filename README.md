@@ -5,7 +5,7 @@
 <h1 align="center">local-searcher</h1>
 
 <p align="center">
-  <strong>让 AI Agent 拥有本地搜索超能力</strong><br>
+  <strong>本地搜索 + reranking + 研究流水线</strong><br>
   <em>Local-first search + reranking + research pipelines for AI agents</em>
 </p>
 
@@ -24,14 +24,11 @@
 
 ## 🧠 这是什么
 
-**local-searcher** 是一个为 AI Agent 打造的本地搜索基础设施。
+**local-searcher** 是一个本地搜索基础设施，为 AI Agent 提供搜索、reranking 和研究能力。
 
-它不是又一个搜索 wrapper。它是你 Agent 的**搜索后端**——聚合 Google、Bing、DuckDuckGo、Qwant 四大引擎，内置 7 级 reranking 流水线，支持断点续传式深度研究，所有数据永不出本机。
-
-> **Zero API keys. Zero data leaks. Unlimited queries. Your machine, your rules.**
+基于 SearXNG 聚合 Google、Bing、DuckDuckGo、Qwant，内置 7 级 reranking 流水线，支持断点续传式深度研究，所有数据不离开本机。无需 API Key。
 
 ```bash
-# 一行启动，Agent 即刻拥有搜索能力
 docker run -d -p 8888:8080 searxng/searxng
 ```
 
@@ -89,8 +86,6 @@ docker run -d -p 8888:8080 searxng/searxng
 </tr>
 </table>
 
-**一句话：免费、无限、隐私、多引擎、带 rerank——这个组合，官方 API 给不了。**
-
 ---
 
 ## ⚡ Quickstart
@@ -135,10 +130,10 @@ cd local-searcher/services && cp .env.example .env.local && ./manage.sh up
 
 | Tool | 能力 | 一句话 |
 |------|------|--------|
-| `local_searcher_search` | SearXNG 搜索 + 多版本 rerank | Agent 的搜索入口 |
-| `local_searcher_research` | 断点续传式深度研究 | 长任务不怕断 |
-| `local_searcher_extract` | 网页提取 (fetch + Playwright) | JS 重度页面也能抓 |
-| `local_searcher_status` | 健康检查 | 知道栈状态 |
+| `local_searcher_search` | SearXNG 搜索 + 多版本 rerank | 搜索 + rerank |
+| `local_searcher_research` | 断点续传式深度研究 | 长任务可断点续传 |
+| `local_searcher_extract` | 网页提取 (fetch + Playwright) | 支持 JS 渲染页面 |
+| `local_searcher_status` | 健康检查 | 栈状态检查 |
 
 ### 📊 7 级 Reranking 流水线
 
