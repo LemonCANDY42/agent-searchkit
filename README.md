@@ -157,6 +157,26 @@ mode: "auto" | "general" | "official-docs" | "github" | "models" | "packages"
 
 Agent 只需传 query，模式自动检测。或者手动指定——查文档用 `official-docs`，找 repo 用 `github`，找模型用 `models`。
 
+### 📎 引用注释 (Citations)
+
+搜索时传入 `citations=true`，每条结果会附带引用信息：
+
+```json
+{
+  "citation": {
+    "ref": "[1]",
+    "formatted": "[1] Page Title. https://example.com/page (accessed 2026-05-15)",
+    "inline": "(example.com, 2026)"
+  }
+}
+```
+
+- `ref` — 编号引用，用于行内标注 `[1]`
+- `formatted` — 完整引用文本，适合参考文献列表
+- `inline` — 简短括号形式，适合行内注明 `(来源, 年份)`
+
+默认关闭。未启用时返回 `citationHint` 提示可开启。
+
 ---
 
 ## 🔌 Integration

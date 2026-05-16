@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 (2026-05-17)
+
+### Renamed
+
+- **Renamed** from `local-searcher` to `web-searcher`
+
+### Features
+
+- **Citation mode** — pass `citations=true` to `web_searcher_search` to get numbered references `[1], [2], ...` with formatted citation text for each result
+- **Search query optimization guide** — `docs/query-optimization.md` with keyword extraction, operator reference, and reformulation strategies for agents
+- **Agent skills** — ready-to-use integration guides for OpenClaw, MCP, LangChain, CrewAI, and standalone CLI (`skills/`)
+
 ## 0.3.0 (2026-05-15)
 
 ### 🎉 Initial public release
