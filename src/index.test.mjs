@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import manifest from "./openclaw.plugin.json" with { type: "json" };
+import manifest from "../openclaw.plugin.json" with { type: "json" };
 
 import { __test } from "./index.ts";
 
@@ -809,11 +809,11 @@ test("v1.5 broad discovery downranks platform-only meta results on mixed-intent 
 
 test("structured token matching handles hyphenated tool names across spacing variants", () => {
   assert.equal(
-    __test.countTokenMatches("Search Info Plugin Overview", ["agent-searchkit", "plugin"]),
+    __test.countTokenMatches("Agent Searchkit Plugin Overview", ["agent-searchkit", "plugin"]),
     2,
   );
   assert.equal(
-    __test.textIncludesQueryPhrase("OpenClaw Search Info Plugin", "agent-searchkit plugin"),
+    __test.textIncludesQueryPhrase("OpenClaw Agent Searchkit Plugin", "agent-searchkit plugin"),
     true,
   );
 });
@@ -833,7 +833,7 @@ test("structured entity matching promotes punctuation-variant docs results", () 
         score: 0.6,
       }),
       makeResult({
-        title: "Search Info Plugin docs overview",
+        title: "Agent Searchkit Plugin docs overview",
         url: "https://readthedocs.io/projects/plugin/overview",
         host: "readthedocs.io",
         path: "/projects/plugin/overview",
@@ -847,7 +847,7 @@ test("structured entity matching promotes punctuation-variant docs results", () 
   );
 
   assert.equal(planner.branch, "precision-lookup");
-  assert.equal(ranked[0].title, "Search Info Plugin docs overview");
+  assert.equal(ranked[0].title, "Agent Searchkit Plugin docs overview");
   assert.ok((ranked[0].entityMatchStrength ?? 0) > (ranked[1].entityMatchStrength ?? 0));
 });
 

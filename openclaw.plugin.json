@@ -2,8 +2,10 @@
   "id": "agent-searchkit",
   "name": "Agent Searchkit",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
-  "version": "0.3.0",
-  "webSearchProviders": ["agent-searchkit"],
+  "version": "0.3.4",
+  "webSearchProviders": [
+    "agent-searchkit"
+  ],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -62,12 +64,27 @@
       },
       "defaultMode": {
         "type": "string",
-        "enum": ["auto", "general", "official-docs", "github", "models", "packages"],
+        "enum": [
+          "auto",
+          "general",
+          "official-docs",
+          "github",
+          "models",
+          "packages"
+        ],
         "default": "auto"
       },
       "defaultRerankVersion": {
         "type": "string",
-        "enum": ["v1.0", "v1.1", "v1.2", "v1.3", "v1.4", "v1.5", "v2.0"],
+        "enum": [
+          "v1.0",
+          "v1.1",
+          "v1.2",
+          "v1.3",
+          "v1.4",
+          "v1.5",
+          "v2.0"
+        ],
         "default": "v1.4"
       },
       "embeddingModelPath": {

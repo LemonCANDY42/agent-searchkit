@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.4 (2026-05-17)
+
+### Changed
+
+- Document OpenClaw 2026.5.12+ install behavior for `node:child_process` safety warnings and recommend `--dangerously-force-unsafe-install` only for trusted installs.
+- Add `esbuild` as an explicit dev dependency so fresh checkouts can run `npm run build`.
+
+### Fixed
+
+- Fix the test manifest import path and align renamed `agent-searchkit` matching fixtures.
+
 ## 0.4.0 (2026-05-17)
 
 ### Renamed

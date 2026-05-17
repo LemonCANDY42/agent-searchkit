@@ -54,7 +54,7 @@ docker run -d --name searxng -p 8888:8080 searxng/searxng
 
 ```bash
 # 安装插件
-openclaw plugins install clawhub:agent-searchkit
+openclaw plugins install clawhub:agent-searchkit --dangerously-force-unsafe-install
 openclaw config set plugins.entries.agent-searchkit.enabled true
 openclaw config set plugins.entries.agent-searchkit.config.searxngBaseUrl "http://127.0.0.1:8888"
 
@@ -66,6 +66,12 @@ openclaw gateway restart
 ```
 
 设置 `tools.web.search.provider` 后，Agent 调用内置 `web_search` 会自动走 SearXNG + reranking。
+
+> Why the scary install flag?
+>
+> `agent-searchkit` includes an optional browser extraction fallback and local diagnostics. Those paths use Node's `child_process` API to run the bundled extraction script and inspect Docker container names. OpenClaw 2026.5.12+ blocks plugins with shell/process-spawn capability by default because that pattern can be dangerous in untrusted plugins.
+>
+> In this plugin, the process-spawn usage is scoped to local extraction/diagnostics, not arbitrary user-provided shell execution. Normal installation may therefore stop with a "dangerous code patterns" warning. Use `--dangerously-force-unsafe-install` only after reviewing the source and only on a machine where you trust the plugin.
 
 **其他框架 / 独立使用：**
 
@@ -200,11 +206,13 @@ Agent 只需传 query，模式自动检测。或者手动指定——查文档�
 ### OpenClaw（原生插件）
 
 ```bash
-openclaw plugins install clawhub:agent-searchkit
+openclaw plugins install clawhub:agent-searchkit --dangerously-force-unsafe-install
 openclaw config set tools.web.search.provider agent-searchkit
 openclaw gateway restart
 # Agent 调用 web_search 时自动走 agent-searchkit
 ```
+
+OpenClaw may warn that the plugin contains high-risk code patterns because the optional browser extraction and Docker diagnostics use `node:child_process`. That warning is expected for current releases; install with the force flag only if you trust this source.
 
 ### MCP Server
 
