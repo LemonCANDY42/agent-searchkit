@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5 (2026-05-17)
+
+### Fixed
+
+- Move the OpenClaw web-search provider declaration to `contracts.webSearchProviders` so OpenClaw 2026.5.12+ can select `agent-searchkit` as `tools.web.search.provider`.
+
 ## 0.3.4 (2026-05-17)
 
 ### Changed

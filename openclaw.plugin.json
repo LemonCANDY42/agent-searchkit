@@ -2,10 +2,7 @@
   "id": "agent-searchkit",
   "name": "Agent Searchkit",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
-  "version": "0.3.4",
-  "webSearchProviders": [
-    "agent-searchkit"
-  ],
+  "version": "0.3.5",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -91,5 +88,10 @@
         "type": "string"
       }
     }
+  },
+  "contracts": {
+    "webSearchProviders": [
+      "agent-searchkit"
+    ]
   }
 }
