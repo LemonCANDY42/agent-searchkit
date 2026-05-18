@@ -90,7 +90,7 @@ openclaw gateway restart
   "mcpServers": {
     "agent-searchkit": {
       "command": "npx",
-      "args": ["-y", "agent-searchkit@latest", "agent-searchkit-mcp"],
+      "args": ["-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -106,7 +106,7 @@ openclaw gateway restart
   "mcpServers": {
     "agent-searchkit": {
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "agent-searchkit@latest", "agent-searchkit-mcp"],
+      "args": ["/c", "npx", "-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -305,7 +305,7 @@ Use the npm entrypoint in MCP clients:
   "mcpServers": {
     "agent-searchkit": {
       "command": "npx",
-      "args": ["-y", "agent-searchkit@latest", "agent-searchkit-mcp"],
+      "args": ["-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
       "env": { "SEARXNG_BASE_URL": "http://127.0.0.1:8888" }
     }
   }

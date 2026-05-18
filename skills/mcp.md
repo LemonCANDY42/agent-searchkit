@@ -38,7 +38,7 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mc
   "mcpServers": {
     "agent-searchkit": {
       "command": "npx",
-      "args": ["-y", "agent-searchkit@latest", "agent-searchkit-mcp"],
+      "args": ["-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -47,7 +47,7 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mc
 }
 ```
 
-On Windows, use `"command": "cmd"` and `"args": ["/c", "npx", "-y", "agent-searchkit@latest", "agent-searchkit-mcp"]`.
+On Windows, use `"command": "cmd"` and `"args": ["/c", "npx", "-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"]`.
 
 For a local checkout, set `command` to `/absolute/path/to/agent-searchkit/bin/agent-searchkit-mcp` after running `npm run build`.
 

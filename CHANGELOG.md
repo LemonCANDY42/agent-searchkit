@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.8 (2026-05-18)
+
+### Fixed
+
+- Fix npx-based MCP install examples for packages with multiple bin entries by using `--package agent-searchkit@latest agent-searchkit-mcp`.
+- Normalize npm package metadata so future publishes do not rely on npm auto-corrections.
+
 ## 0.3.7 (2026-05-18)
 
 ### Changed
