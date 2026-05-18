@@ -83,7 +83,7 @@ openclaw gateway restart
 
 对 MCP 客户端，推荐使用 npm 包入口，而不是手写 `path/to/.../src/index.ts`。安装后的 `agent-searchkit-mcp` 是 stdio MCP server，会调用包内 rerank 搜索逻辑；`SEARXNG_BASE_URL` 指向你的本地 SearXNG。
 
-**macOS / Linux：**
+**推荐配置（统一用 npm/npx）：**
 
 ```json
 {
@@ -99,68 +99,10 @@ openclaw gateway restart
 }
 ```
 
-**Windows：**
-
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
-      "env": {
-        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
-      }
-    }
-  }
-}
-```
-
-**LM Studio / GUI 客户端推荐：**
-
-GUI 应用有时不会继承 shell 的 PATH，并且首次 `npx` 下载可能超过 MCP 初始化超时。对 LM Studio，推荐先全局安装，再在 `mcp.json` 里写绝对路径。
-
-Windows:
-
-```bat
-npm install -g agent-searchkit@latest
-where agent-searchkit-mcp
-agent-searchkit-mcp --help
-```
-
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "C:\\Users\\YOUR_USER\\AppData\\Roaming\\npm\\agent-searchkit-mcp.cmd",
-      "args": [],
-      "env": {
-        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
-      }
-    }
-  }
-}
-```
-
-macOS / Linux:
+如果 GUI 客户端首次启动 `npx` 超时，可以先在同一台机器上预热 npm 缓存：
 
 ```bash
-npm install -g agent-searchkit@latest
-which agent-searchkit-mcp
-agent-searchkit-mcp --help
-```
-
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "/opt/homebrew/bin/agent-searchkit-mcp",
-      "args": [],
-      "env": {
-        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
-      }
-    }
-  }
-}
+npm exec --yes --package=agent-searchkit@latest -- agent-searchkit-mcp --help
 ```
 
 如果你有自己的 SearXNG，保持 `SEARXNG_BASE_URL` 为它的地址；如果复用 OpenClaw 本地实例，通常改为 `http://127.0.0.1:18080`。
@@ -362,8 +304,7 @@ Use the npm entrypoint in MCP clients:
 }
 ```
 
-On Windows, use `"command": "cmd"` and put `"/c"` before `"npx"` in `args`.
-For LM Studio on macOS, prefer `npm install -g agent-searchkit@latest` and set `command` to the absolute `agent-searchkit-mcp` path returned by `which agent-searchkit-mcp`; do not use the Windows `cmd /c` wrapper on macOS/Linux.
+If a GUI client times out on first launch, pre-warm the npm cache with `npm exec --yes --package=agent-searchkit@latest -- agent-searchkit-mcp --help`, then restart the client.
 
 ### Python / LangChain
 

@@ -4,14 +4,14 @@
 
 ### Fixed
 
-- Expand LM Studio setup guidance with Windows global-install configuration using the `.cmd` shim from `where agent-searchkit-mcp`.
+- Unify MCP setup guidance around npm/npx commands instead of OS-specific command wrappers.
 - Lazy-load the heavy search bundle after MCP initialization so LM Studio can complete the stdio handshake before search code is loaded.
 
 ## 0.3.9 (2026-05-18)
 
 ### Fixed
 
-- Add LM Studio-specific MCP setup guidance that uses a globally installed absolute `agent-searchkit-mcp` path and avoids the Windows-only `cmd /c` wrapper on macOS/Linux.
+- Add LM Studio-specific MCP setup guidance that uses the same npm/npx command shape as other MCP clients.
 - Report the MCP server version from `package.json` instead of a hard-coded value.
 
 ## 0.3.8 (2026-05-18)

@@ -31,7 +31,7 @@ npm run build
 
 ### 2. Configure your MCP client
 
-Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mcp.json`). macOS/Linux can use `npx`:
+Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.json`, or LM Studio's `mcp.json`):
 
 ```json
 {
@@ -47,52 +47,10 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mc
 }
 ```
 
-On Windows, use `"command": "cmd"` and `"args": ["/c", "npx", "-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"]`.
-
-For LM Studio or other GUI clients, prefer a global install and an absolute command path to avoid PATH inheritance and first-run npx timeout issues.
-
-Windows:
-
-```bat
-npm install -g agent-searchkit@latest
-where agent-searchkit-mcp
-agent-searchkit-mcp --help
-```
-
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "C:\\Users\\YOUR_USER\\AppData\\Roaming\\npm\\agent-searchkit-mcp.cmd",
-      "args": [],
-      "env": {
-        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
-      }
-    }
-  }
-}
-```
-
-macOS / Linux:
+If a GUI client times out on first launch, pre-warm the npm cache from a terminal on the same machine:
 
 ```bash
-npm install -g agent-searchkit@latest
-which agent-searchkit-mcp
-agent-searchkit-mcp --help
-```
-
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "/opt/homebrew/bin/agent-searchkit-mcp",
-      "args": [],
-      "env": {
-        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
-      }
-    }
-  }
-}
+npm exec --yes --package=agent-searchkit@latest -- agent-searchkit-mcp --help
 ```
 
 If reusing OpenClaw's local SearXNG, set `SEARXNG_BASE_URL` to `http://127.0.0.1:18080`.
