@@ -490,7 +490,8 @@ class WebSearchTool(BaseTool):
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
 | `searxngBaseUrl` | `http://127.0.0.1:8888` | SearXNG 地址 |
-| `defaultLanguage` | `en-US` | 默认搜索语言 |
+| `defaultLanguage` | `zh-CN` | 默认搜索语言；中文/CJK 查询会自动使用 `zh-CN` 并压缩中文字符间空格 |
+| `defaultEngines` | `["bing", "bing news", "wikipedia"]` | 默认 SearXNG engines，显式传给 SearXNG，避免实例默认引擎漂移 |
 | `defaultLimit` | `8` | 默认返回条数 |
 | `rerankEnabled` | `true` | 启用 reranking |
 | `defaultRerankVersion` | `v1.4` | 默认 rerank 版本 |

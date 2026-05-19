@@ -26,7 +26,18 @@
       },
       "defaultLanguage": {
         "type": "string",
-        "default": "en-US"
+        "default": "zh-CN"
+      },
+      "defaultEngines": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "bing",
+          "bing news",
+          "wikipedia"
+        ]
       },
       "defaultLimit": {
         "type": "number",

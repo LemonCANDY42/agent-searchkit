@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.23 (2026-05-19)
+
+### Changed
+
+- Adopt SearXNG request-shaping lessons from LangChain-SearXNG: default to `zh-CN`, explicitly pass curated engines, and compact whitespace-fragmented Chinese queries before sending them to SearXNG.
+
 ## 0.3.22 (2026-05-19)
 
 ### Changed

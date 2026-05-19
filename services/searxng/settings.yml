@@ -12,7 +12,7 @@ search:
   safe_search: 1
   autocomplete: ""
   favicon_resolver: ""
-  default_lang: "en-US"
+  default_lang: "zh-CN"
   formats:
     - html
     - json

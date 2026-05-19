@@ -157,6 +157,54 @@ test("Chinese searches preserve native SearXNG result order instead of independe
   ]);
 });
 
+test("Chinese SearXNG requests compact CJK whitespace and force zh-CN language", async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    calls.push(new URL(String(url)));
+    return {
+      ok: true,
+      json: async () => ({
+        results: [
+          {
+            title: "马斯克最新动向",
+            url: "https://example.com/musk",
+            content: "马斯克最近新闻",
+          },
+        ],
+      }),
+    };
+  };
+
+  try {
+    const result = await __test.searchSearxng(
+      {
+        searxngBaseUrl: "http://127.0.0.1:8888",
+        defaultLanguage: "en-US",
+        defaultLimit: 5,
+        defaultMode: "auto",
+        defaultRerankVersion: "v1.4",
+        rerankEnabled: true,
+        fetchTimeoutMs: 1000,
+      },
+      {
+        query: "马斯克 最近 动向 新闻",
+        category: "general",
+        language: "en-US",
+        limit: 1,
+      },
+    );
+
+    assert.equal(result.language, "zh-CN");
+    assert.equal(result.rerankVersion, "v1.0");
+    assert.equal(calls[0].searchParams.get("q"), "马斯克最近动向新闻");
+    assert.equal(calls[0].searchParams.get("language"), "zh-CN");
+    assert.equal(calls[0].searchParams.get("engines"), "bing,bing news,wikipedia");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("agent-aware contract can force official-doc and model intent with small structured fields", () => {
   const releaseIntent = __test.detectQueryIntent(
     "OpenClaw latest notes",

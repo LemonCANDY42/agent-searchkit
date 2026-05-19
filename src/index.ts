@@ -171,7 +171,8 @@ type DecontaminationSummary = {
 const DEFAULTS = {
   searxngBaseUrl: "http://127.0.0.1:8888",
   ntfyBaseUrl: "http://127.0.0.1:18082",
-  defaultLanguage: "en-US",
+  defaultLanguage: "zh-CN",
+  defaultEngines: ["bing", "bing news", "wikipedia"],
   defaultLimit: 8,
   defaultSafeSearch: 1,
   maxTextChars: 12000,
@@ -795,6 +796,31 @@ function cjkCoreEntityAdjustment(result: SearchResult, intent: SearchIntent) {
 function shouldUseNativeSearxngRankingForCjk(queryOrIntent: string | SearchIntent) {
   const query = typeof queryOrIntent === "string" ? queryOrIntent : queryOrIntent.normalizedQuery;
   return hasCjkText(query);
+}
+
+function normalizeSearxngQueryForLanguage(query: string, language: string) {
+  if (!hasCjkText(query)) {
+    return query.trim();
+  }
+  const compact = compactCjkWhitespace(query);
+  return compact || query.trim();
+}
+
+function normalizeSearchLanguageForQuery(language: string, query: string) {
+  if (hasCjkText(query) && (!language || language.toLowerCase() === "en-us")) {
+    return "zh-CN";
+  }
+  return language;
+}
+
+function normalizeSearxngEngines(input: unknown) {
+  if (Array.isArray(input)) {
+    return input.map((engine) => typeof engine === "string" ? engine.trim() : "").filter(Boolean);
+  }
+  if (typeof input === "string") {
+    return input.split(",").map((engine) => engine.trim()).filter(Boolean);
+  }
+  return DEFAULTS.defaultEngines;
 }
 
 function hostMatches(host: string, suffix: string) {
@@ -2662,10 +2688,11 @@ async function collectSearchCandidates(
   const perCategoryLimit = Math.max(params.limit * 2, 10);
 
   if (shouldUseNativeSearxngRankingForCjk(intent) || !isRetrievalFirstRerankVersion(params.rerankVersion)) {
+    const searxngQuery = normalizeSearxngQueryForLanguage(params.query, params.language);
     const groups = [] as Array<{ category: SearchCategory; raw: any; results: SearchResult[] }>;
     for (const category of baselineCategories) {
       groups.push(await fetchSearxngCategory(cfg, {
-        query: params.query,
+        query: searxngQuery,
         category,
         language: params.language,
         safeSearch: params.safeSearch,
@@ -2680,9 +2707,9 @@ async function collectSearchCandidates(
         categoriesQueried: baselineCategories,
         variants: [
           {
-            query: params.query,
+            query: searxngQuery,
             categories: baselineCategories,
-            rationale: ["original-query"],
+            rationale: searxngQuery === params.query ? ["original-query"] : ["cjk-compact-query", "native-searxng-ranking"],
           },
         ],
       } satisfies RetrievalPlan,
@@ -2760,12 +2787,16 @@ async function fetchWithTimeout(url: string, opts: { timeoutMs?: number; headers
 
 async function fetchSearxngCategory(cfg: any, params: { query: string; category: SearchCategory; language: string; safeSearch: number; perCategoryLimit: number; }) {
   const endpoint = new URL("/search", cfg.searxngBaseUrl.endsWith("/") ? cfg.searxngBaseUrl : `${cfg.searxngBaseUrl}/`);
+  const engines = normalizeSearxngEngines(cfg.defaultEngines);
   endpoint.searchParams.set("q", params.query);
   endpoint.searchParams.set("format", "json");
   endpoint.searchParams.set("language", params.language);
   endpoint.searchParams.set("pageno", "1");
   endpoint.searchParams.set("safesearch", String(params.safeSearch));
   endpoint.searchParams.set("categories", params.category);
+  if (engines.length > 0) {
+    endpoint.searchParams.set("engines", engines.join(","));
+  }
 
   let lastError: unknown = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -4988,6 +5019,7 @@ async function searchSearxng(cfg: any, params: {
   const language = typeof params.language === "string" && params.language.trim()
     ? params.language
     : cfg.defaultLanguage;
+  const searchLanguage = normalizeSearchLanguageForQuery(language, params.query);
   const safeSearch =
     typeof params.safeSearch === "number" && Number.isFinite(params.safeSearch)
       ? Math.min(2, Math.max(0, Math.floor(params.safeSearch)))
@@ -4999,7 +5031,7 @@ async function searchSearxng(cfg: any, params: {
   const retrieved = await collectSearchCandidates(cfg, {
     query: params.query,
     category: requestedCategory,
-    language,
+    language: searchLanguage,
     safeSearch,
     limit,
     mode: requestedMode,
@@ -5029,7 +5061,7 @@ async function searchSearxng(cfg: any, params: {
     query: params.query,
     requestedCategory: requestedCategory ?? null,
     categoriesQueried,
-    language,
+    language: searchLanguage,
     safeSearch,
     mode: intent.mode,
     rerankApplied: effectiveRerankVersion !== "v1.0",
@@ -5244,11 +5276,12 @@ function resolvePluginCfg(api: any) {
       typeof cfg.ntfyBaseUrl === "string" && cfg.ntfyBaseUrl.trim()
         ? cfg.ntfyBaseUrl
         : DEFAULTS.ntfyBaseUrl,
-    defaultLanguage:
-      typeof cfg.defaultLanguage === "string" && cfg.defaultLanguage.trim()
-        ? cfg.defaultLanguage
-        : DEFAULTS.defaultLanguage,
-    defaultLimit:
+      defaultLanguage:
+        typeof cfg.defaultLanguage === "string" && cfg.defaultLanguage.trim()
+          ? cfg.defaultLanguage
+          : DEFAULTS.defaultLanguage,
+      defaultEngines: normalizeSearxngEngines(cfg.defaultEngines),
+      defaultLimit:
       typeof cfg.defaultLimit === "number" && cfg.defaultLimit > 0
         ? Math.min(20, Math.max(1, Math.floor(cfg.defaultLimit)))
         : DEFAULTS.defaultLimit,
@@ -5426,6 +5459,7 @@ const plugin = {
       runsDir: { type: "string" },
       extractRoot: { type: "string" },
       defaultLanguage: { type: "string", default: DEFAULTS.defaultLanguage },
+      defaultEngines: { type: "array", items: { type: "string" }, default: DEFAULTS.defaultEngines },
       defaultLimit: { type: "number", minimum: 1, maximum: 20, default: DEFAULTS.defaultLimit },
       fetchTimeoutMs: { type: "number", minimum: 1000, default: DEFAULTS.fetchTimeoutMs },
       browserTimeoutMs: { type: "number", minimum: 1000, default: DEFAULTS.browserTimeoutMs },
@@ -5763,7 +5797,7 @@ const plugin = {
           const result = await searchSearxng(cfg, {
             query: String(args.query ?? ""),
             limit,
-            language,
+    language: searchLanguage,
             mode: typeof args.mode === "string" ? args.mode as SearchMode : undefined,
             rerank: cfg.rerankEnabled,
             rerankVersion: resolveRequestedRerankVersion(args.rerankVersion) ?? cfg.defaultRerankVersion,
