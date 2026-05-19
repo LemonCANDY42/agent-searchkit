@@ -672,6 +672,126 @@ function appendMissingFragments(query: string, fragments: string[]) {
   return `${query.trim()} ${missing.join(" ")}`.trim();
 }
 
+const CJK_CHAR_PATTERN = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+const CJK_NEWS_MODIFIER_TOKENS = new Set([
+  "最近",
+  "近期",
+  "最新",
+  "动向",
+  "动态",
+  "进展",
+  "新闻",
+  "消息",
+  "资讯",
+  "近况",
+  "今日",
+  "今天",
+]);
+
+function hasCjkText(input: string) {
+  return CJK_CHAR_PATTERN.test(input);
+}
+
+function compactCjkWhitespace(input: string) {
+  return normalizeText(input)
+    .replace(/([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])\s+(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])/gu, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cjkCoreEntityQuery(input: string) {
+  const parts = normalizeText(input).split(/\s+/g).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2 || !parts.some(hasCjkText)) {
+    return "";
+  }
+  const kept = parts.filter((part) => !(hasCjkText(part) && CJK_NEWS_MODIFIER_TOKENS.has(part)));
+  if (kept.length === parts.length || kept.length === 0) {
+    return "";
+  }
+  const joined = kept.join("").trim();
+  return joined.length >= 2 ? joined : "";
+}
+
+function cjkRetrievalSeeds(query: string, language: string) {
+  const zhLike = language.toLowerCase().startsWith("zh") || hasCjkText(query);
+  if (!zhLike) {
+    return [];
+  }
+  const seeds: RetrievalVariant[] = [];
+  const core = cjkCoreEntityQuery(query);
+  if (core) {
+    seeds.push({
+      query: core,
+      categories: [],
+      rationale: ["cjk-core-query", "avoid-space-fragmented-cjk-retrieval"],
+    });
+  }
+  const compact = compactCjkWhitespace(query);
+  if (compact && normalizeText(compact) !== normalizeText(query) && compact !== core) {
+    seeds.push({
+      query: compact,
+      categories: [],
+      rationale: ["cjk-compact-query", "avoid-space-fragmented-cjk-retrieval"],
+    });
+  }
+  return seeds;
+}
+
+function cjkCoreEntityTokensForIntent(intent: SearchIntent) {
+  if (!hasCjkText(intent.normalizedQuery)) {
+    return [];
+  }
+
+  const coreQuery = cjkCoreEntityQuery(intent.normalizedQuery);
+  const tokenCandidates = intent.tokens
+    .map((token) => normalizeText(token).trim())
+    .filter((token) =>
+      token.length >= 2 &&
+      hasCjkText(token) &&
+      !CJK_NEWS_MODIFIER_TOKENS.has(token) &&
+      !isSourceLikeQueryToken(token),
+    );
+  if (!coreQuery && tokenCandidates.length !== 1) {
+    return [];
+  }
+
+  return uniqueStrings([
+    ...(coreQuery ? [coreQuery] : []),
+    ...tokenCandidates,
+  ]).sort((a, b) => b.length - a.length);
+}
+
+function cjkCoreEntityMatchStrength(result: SearchResult, intent: SearchIntent) {
+  const tokens = cjkCoreEntityTokensForIntent(intent);
+  if (tokens.length === 0) {
+    return 0;
+  }
+
+  const title = normalizeText(result.title);
+  const snippet = normalizeText(result.snippet);
+  const pagePath = normalizeText(result.path);
+  const host = normalizeText(result.host);
+  const combined = `${title} ${snippet} ${pagePath} ${host}`;
+  if (tokens.some((token) => title.includes(token))) {
+    return 1;
+  }
+  if (tokens.some((token) => snippet.includes(token) || pagePath.includes(token))) {
+    return 0.82;
+  }
+  if (tokens.some((token) => combined.includes(token))) {
+    return 0.6;
+  }
+  return -1;
+}
+
+function cjkCoreEntityAdjustment(result: SearchResult, intent: SearchIntent) {
+  const strength = cjkCoreEntityMatchStrength(result, intent);
+  if (strength === 0) {
+    return 0;
+  }
+  return strength > 0 ? Number((0.22 * strength).toFixed(4)) : -0.34;
+}
+
 function hostMatches(host: string, suffix: string) {
   return host === suffix || host.endsWith(`.${suffix}`);
 }
@@ -1847,7 +1967,8 @@ function annotateResultDiagnostics(
       const guardedAdjustment = options.applyGuardedAdjustment
         ? guardedAdjustmentForResult(result, { ...diagnostics, diversityValue, branchAdjustment }, intent, planner)
         : 0;
-      const totalAdjustment = Number((branchAdjustment + guardedAdjustment).toFixed(4));
+      const cjkEntityAdjustment = cjkCoreEntityAdjustment(result, intent);
+      const totalAdjustment = Number((branchAdjustment + guardedAdjustment + cjkEntityAdjustment).toFixed(4));
       const score = typeof result.score === "number"
         ? Number((result.score + totalAdjustment).toFixed(4))
         : totalAdjustment;
@@ -1866,6 +1987,7 @@ function annotateResultDiagnostics(
             `diversity-value:${diversityValue.toFixed(2)}`,
             `planner-adjustment:${branchAdjustment.toFixed(4)}`,
             `guarded-adjustment:${guardedAdjustment.toFixed(4)}`,
+            `cjk-entity-adjustment:${cjkEntityAdjustment.toFixed(4)}`,
           ]
         : result.signals;
 
@@ -2211,7 +2333,12 @@ function buildRetrievalPlanV14(
 ): RetrievalPlan {
   const profile = selectAdaptiveHybridProfile(intent, requestedCategory);
   const categoriesQueried = resolveQueryCategoriesV14(intent, requestedCategory, profile).slice(0, MAX_QUERY_CATEGORIES) as SearchCategory[];
+  const zhLike = language.toLowerCase().startsWith("zh") || hasCjkText(query);
   const variants: RetrievalVariant[] = [
+    ...cjkRetrievalSeeds(query, language).map((seed) => ({
+      ...seed,
+      categories: categoriesQueried,
+    })),
     {
       query: query.trim(),
       categories: categoriesQueried,
@@ -2229,7 +2356,6 @@ function buildRetrievalPlanV14(
       rationale,
     });
   };
-  const zhLike = language.toLowerCase().startsWith("zh");
   const docsTroubleshootingLike =
     profile.bucket === "guarded-official-docs" &&
     hasAny(intent.normalizedQuery, [
@@ -2328,10 +2454,11 @@ function buildRetrievalPlanV14(
     deduped.push(variant);
   }
 
+  const maxVariants = zhLike ? 3 : 2;
   return {
     strategy: "retrieval-first-v1.4",
     categoriesQueried,
-    variants: deduped.slice(0, 2),
+    variants: deduped.slice(0, maxVariants),
   };
 }
 

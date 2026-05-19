@@ -72,6 +72,51 @@ test("planner keeps exact docs lookups on the precision path", () => {
   assert.equal(planner.precisionDial, "precise");
 });
 
+test("Chinese spaced news queries add entity-first retrieval seeds", () => {
+  const query = "马斯克 最近 动向 新闻";
+  const intent = __test.detectQueryIntent(query, "auto", "general");
+  const plan = __test.buildRetrievalPlanV14(query, intent, "general", "zh-CN");
+
+  assert.equal(plan.variants[0].query, "马斯克");
+  assert.ok(plan.variants[0].rationale.includes("cjk-core-query"));
+  assert.ok(plan.variants.some((variant) => variant.query === "马斯克最近动向新闻"));
+  assert.ok(plan.variants.some((variant) => variant.query === query));
+});
+
+test("Chinese exact entity rerank keeps Musk results above single-character horse matches", () => {
+  const query = "马斯克 最近 动向 新闻";
+  const intent = __test.detectQueryIntent(query, "auto", "general");
+  const planner = __test.buildPlannerOutput(query, intent, "general");
+  const results = [
+    makeResult({
+      title: "马：从迷你狐狸进化到高头大马",
+      url: "https://www.forestry.gov.cn/article/horse",
+      snippet: "关于马的演化历史。",
+      host: "www.forestry.gov.cn",
+      path: "/article/horse",
+      originalRank: 1,
+    }),
+    makeResult({
+      title: "马斯克最新动向：SpaceX 与特斯拉近期消息",
+      url: "https://example.com/elon-musk-news",
+      snippet: "埃隆·马斯克最近的新闻和公司进展。",
+      host: "example.com",
+      path: "/elon-musk-news",
+      originalRank: 2,
+    }),
+  ];
+
+  const reranked = __test.rerankResultsV20(
+    __test.annotateResultDiagnostics(results, intent, planner, { applyBranchAdjustment: true }),
+    intent,
+    planner,
+    2,
+    false,
+  );
+
+  assert.equal(reranked[0].title, "马斯克最新动向：SpaceX 与特斯拉近期消息");
+});
+
 test("agent-aware contract can force official-doc and model intent with small structured fields", () => {
   const releaseIntent = __test.detectQueryIntent(
     "OpenClaw latest notes",

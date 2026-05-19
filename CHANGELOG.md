@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.21 (2026-05-19)
+
+### Fixed
+
+- Add CJK entity-first retrieval seeds and a CJK core-entity rerank guard so spaced Chinese news queries such as `马斯克 最近 动向 新闻` do not drift into single-character matches like `马`.
+
 ## 0.3.20 (2026-05-19)
 
 ### Fixed
