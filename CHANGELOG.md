@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.13 (2026-05-19)
+
+### Fixed
+
+- Make the default service bootstrap start only SearXNG so MCP setup does not depend on pulling optional Valkey or ntfy images.
+- Move Valkey and ntfy behind the optional Docker Compose `extras` profile and keep readiness checks focused on the SearXNG JSON API.
+
 ## 0.3.12 (2026-05-19)
 
 ### Fixed

@@ -36,10 +36,12 @@ print('results=', len(payload.get('results', [])))
 print('unresponsive_engines=', len(payload.get('unresponsive_engines', [])))
 PY
 
-echo
-echo "==> ntfy health"
-wait_url "http://127.0.0.1:${NTFY_PORT}/v1/health" 20
-curl -fsS "http://127.0.0.1:${NTFY_PORT}/v1/health"
+if [[ "${COMPOSE_PROFILES:-}" == *extras* ]]; then
+  echo
+  echo "==> ntfy health"
+  wait_url "http://127.0.0.1:${NTFY_PORT}/v1/health" 20
+  curl -fsS "http://127.0.0.1:${NTFY_PORT}/v1/health"
+fi
 
 echo
 echo "==> agent-searchkit plugin unit tests"

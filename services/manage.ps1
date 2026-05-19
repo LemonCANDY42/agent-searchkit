@@ -71,11 +71,6 @@ function Test-Services {
   if (-not $port) {
     $port = "8888"
   }
-  $ntfyPort = $vars["NTFY_PORT"]
-  if (-not $ntfyPort) {
-    $ntfyPort = "18082"
-  }
-
   Write-Host "==> searxng JSON API"
   $content = (Invoke-WebRequest "http://127.0.0.1:$port/search?q=openclaw&format=json&language=en-US" -UseBasicParsing -TimeoutSec 20).Content
   if (-not ($content -match '"results"' -or $content -match '"query"')) {
@@ -83,10 +78,7 @@ function Test-Services {
     throw "SearXNG responded, but JSON API did not look valid."
   }
 
-  Write-Host "==> ntfy health"
-  Invoke-WebRequest "http://127.0.0.1:$ntfyPort/v1/health" -UseBasicParsing -TimeoutSec 20 | Out-Null
-
-  Write-Host "OK: services are reachable."
+  Write-Host "OK: SearXNG JSON API is reachable."
 }
 
 $Command = if ($args.Count -gt 0) { $args[0] } else { "" }
@@ -125,11 +117,10 @@ switch ($Command) {
     $port = if ($vars["SEARXNG_PORT"]) { $vars["SEARXNG_PORT"] } else { "8888" }
     $ntfyPort = if ($vars["NTFY_PORT"]) { $vars["NTFY_PORT"] } else { "18082" }
     Write-Host "SearXNG : http://127.0.0.1:$port"
-    Write-Host "ntfy    : http://127.0.0.1:$ntfyPort"
+    Write-Host "ntfy    : http://127.0.0.1:$ntfyPort (optional: COMPOSE_PROFILES=extras)"
   }
   default {
     Write-Host "Usage: .\manage.ps1 {up|down|restart|ps|status|logs|pull|test|wait|urls}"
     exit 1
   }
 }
-

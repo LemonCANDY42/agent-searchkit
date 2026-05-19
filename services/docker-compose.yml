@@ -2,6 +2,7 @@ services:
   valkey:
     image: valkey/valkey:8-alpine
     container_name: agent-searchkit-valkey
+    profiles: ["extras"]
     command: valkey-server --save 60 1 --loglevel warning
     restart: unless-stopped
     volumes:
@@ -11,8 +12,6 @@ services:
     image: searxng/searxng:latest
     container_name: agent-searchkit-searxng
     restart: unless-stopped
-    depends_on:
-      - valkey
     ports:
       - "127.0.0.1:${SEARXNG_PORT}:8080"
     volumes:
@@ -26,11 +25,11 @@ services:
       SEARXNG_LIMITER: "false"
       SEARXNG_PUBLIC_INSTANCE: "false"
       SEARXNG_IMAGE_PROXY: "false"
-      SEARXNG_VALKEY_URL: "valkey://valkey:6379/0"
 
   ntfy:
     image: binwiederhier/ntfy:latest
     container_name: agent-searchkit-ntfy
+    profiles: ["extras"]
     restart: unless-stopped
     command: ["serve", "--config", "/etc/ntfy/server.yml"]
     ports:

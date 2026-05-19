@@ -65,7 +65,7 @@ case "${1:-}" in
     source "$ENV_FILE"
     cat <<EOF
 SearXNG : http://127.0.0.1:${SEARXNG_PORT}
-ntfy    : http://127.0.0.1:${NTFY_PORT}
+ntfy    : http://127.0.0.1:${NTFY_PORT} (optional: COMPOSE_PROFILES=extras)
 EOF
     ;;
   *)
