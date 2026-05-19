@@ -863,13 +863,11 @@ function cjkCoreEntityAdjustment(result: SearchResult, intent: SearchIntent) {
 }
 
 function shouldUseNativeSearxngRankingForCjk(queryOrIntent: string | SearchIntent) {
-  const query = typeof queryOrIntent === "string" ? queryOrIntent : queryOrIntent.normalizedQuery;
-  return hasCjkText(query);
+  return false;
 }
 
 function shouldUseNativeSearxngRankingForQueryShape(queryOrIntent: string | SearchIntent) {
-  const query = typeof queryOrIntent === "string" ? queryOrIntent : queryOrIntent.normalizedQuery;
-  return hasCjkText(query) || Boolean(latinCoreEntityQuery(query));
+  return false;
 }
 
 function normalizeSearxngQueryForLanguage(query: string, language: string) {
@@ -2789,7 +2787,7 @@ async function collectSearchCandidates(
   const baselineCategories = resolveQueryCategories(requestedCategory, intent);
   const perCategoryLimit = Math.max(params.limit * 2, 10);
 
-  if (shouldUseNativeSearxngRankingForQueryShape(intent) || !isRetrievalFirstRerankVersion(params.rerankVersion)) {
+  if (!isRetrievalFirstRerankVersion(params.rerankVersion)) {
     const searxngQuery = normalizeSearxngQueryForLanguage(params.query, params.language);
     const groups = [] as Array<{ category: SearchCategory; raw: any; results: SearchResult[] }>;
     for (const category of baselineCategories) {
@@ -2811,7 +2809,7 @@ async function collectSearchCandidates(
           {
             query: searxngQuery,
             categories: baselineCategories,
-            rationale: searxngQuery === params.query ? ["original-query"] : ["core-entity-query", "native-searxng-ranking"],
+            rationale: searxngQuery === params.query ? ["original-query"] : ["core-entity-query"],
           },
         ],
       } satisfies RetrievalPlan,
@@ -5074,8 +5072,7 @@ async function rankMergedSearchResults(
     params.rerankVersion === "v1.5" ||
     params.rerankVersion === "v2.0"
   ) && embeddingInfo?.applied === false;
-  const nativeSearchRanking = shouldUseNativeSearxngRankingForQueryShape(intent);
-  const effectiveRerankVersion = nativeSearchRanking ? "v1.0" : embeddingFallback ? "v1.1" : params.rerankVersion;
+  const effectiveRerankVersion = embeddingFallback ? "v1.1" : params.rerankVersion;
   if (embeddingFallback) {
     finalResults = ensureWithinLimit(rerankResultsV11(merged.results, intent, debug), params.limit);
   }
@@ -5664,12 +5661,12 @@ const plugin = {
 
     api.registerTool({
       name: "web_searchkit_search",
-      description: "Search the local SearXNG research stack and return normalized retrieval candidates with citations and engine-health hints. The calling LLM should perform final semantic filtering/reranking before answering.",
+      description: "Search the local SearXNG research stack and return normalized retrieval candidates with citations and engine-health hints. Translate every non-English user search request into a complete English query before calling this tool. The calling LLM should perform final semantic filtering/reranking before answering.",
       parameters: {
         type: "object",
         additionalProperties: false,
         properties: {
-          query: { type: "string", minLength: 1 },
+          query: { type: "string", minLength: 1, description: "Complete English search query. If the user's request is not English, translate it to English first before calling." },
           category: { type: "string", enum: ["general", "news", "it", "images", "videos"] },
           language: { type: "string" },
           limit: { type: "number", minimum: 1, maximum: 20 },
@@ -5879,12 +5876,12 @@ const plugin = {
         configTarget.plugins.entries["agent-searchkit"].config.searxngBaseUrl = value;
       },
       createTool: () => ({
-        description: "Search the web using Agent Searchkit: self-hosted SearXNG retrieval plus local reranking. Results include lightweight citation metadata by default.",
+        description: "Search the web using Agent Searchkit: self-hosted SearXNG retrieval plus local reranking. Translate every non-English user search request into a complete English query before calling. Results include lightweight citation metadata by default.",
         parameters: {
           type: "object",
           additionalProperties: false,
           properties: {
-            query: { type: "string", minLength: 1 },
+            query: { type: "string", minLength: 1, description: "Complete English search query. If the user's request is not English, translate it to English first before calling." },
             count: { type: "number", minimum: 1, maximum: 20 },
             language: { type: "string" },
             citations: { type: "boolean", description: "Include numbered citation metadata on each result. Default: true." },

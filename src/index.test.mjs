@@ -117,8 +117,8 @@ test("Chinese exact entity rerank keeps Musk results above single-character hors
   assert.equal(reranked[0].title, "马斯克最新动向：SpaceX 与特斯拉近期消息");
 });
 
-test("Chinese searches preserve native SearXNG result order instead of independent reranking", async () => {
-  const query = "马斯克 最近 动向 新闻";
+test("searches use the normal v1.4 rerank path instead of native SearXNG order", async () => {
+  const query = "Elon Musk recent news";
   const ranked = await __test.rankMergedSearchResults(
     { defaultMode: "general" },
     {
@@ -146,11 +146,11 @@ test("Chinese searches preserve native SearXNG result order instead of independe
       category: "general",
       mode: "general",
       limit: 2,
-      rerankVersion: "v2.0",
+      rerankVersion: "v1.4",
     },
   );
 
-  assert.equal(ranked.effectiveRerankVersion, "v1.0");
+  assert.equal(ranked.effectiveRerankVersion, "v1.4");
   assert.deepEqual(ranked.finalResults.map((result) => result.title), [
     "马斯克最新动向：SpaceX 与特斯拉近期消息",
     "马：从迷你狐狸进化到高头大马",
@@ -196,7 +196,7 @@ test("Chinese SearXNG requests prefer core entity queries and force zh-CN langua
     );
 
     assert.equal(result.language, "zh-CN");
-    assert.equal(result.rerankVersion, "v1.0");
+    assert.equal(result.rerankVersion, "v1.4");
     assert.equal(calls[0].searchParams.get("q"), "马斯克");
     assert.equal(calls[0].searchParams.get("language"), "zh-CN");
     assert.equal(calls[0].searchParams.get("engines"), "bing,bing news,wikipedia");
@@ -244,13 +244,10 @@ test("Chinese compound news modifiers strip to the named entity before SearXNG",
       },
     );
 
-    assert.equal(result.rerankVersion, "v1.0");
+    assert.equal(result.rerankVersion, "v1.4");
     assert.equal(calls[0].searchParams.get("q"), "张雪峰");
-    assert.deepEqual(result.retrieval.queryVariants[0], {
-      query: "张雪峰",
-      categories: ["news"],
-      rationale: ["core-entity-query", "native-searxng-ranking"],
-    });
+    assert.equal(result.retrieval.queryVariants[0].query, "张雪峰");
+    assert.ok(result.retrieval.queryVariants[0].rationale.includes("cjk-core-query"));
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -291,7 +288,7 @@ test("Chinese compact news-like queries strip trailing modifier phrases before S
   }
 });
 
-test("Romanized Chinese names strip English news modifiers before SearXNG", async () => {
+test("English queries are sent to SearXNG unchanged", async () => {
   const calls = [];
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
@@ -321,14 +318,14 @@ test("Romanized Chinese names strip English news modifiers before SearXNG", asyn
       },
     );
 
-    assert.equal(calls[0].searchParams.get("q"), "zhang xuefeng");
+    assert.equal(calls[0].searchParams.get("q"), "Zhang Xuefeng recent news activities 2025");
     assert.equal(calls[0].searchParams.get("language"), "en-US");
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-test("Romanized Chinese name searches preserve native order after core extraction", async () => {
+test("English Chinese-name searches use normal reranking", async () => {
   const ranked = await __test.rankMergedSearchResults(
     { defaultMode: "general" },
     {
@@ -358,7 +355,7 @@ test("Romanized Chinese name searches preserve native order after core extractio
     },
   );
 
-  assert.equal(ranked.effectiveRerankVersion, "v1.0");
+  assert.equal(ranked.effectiveRerankVersion, "v1.4");
   assert.equal(ranked.finalResults[0].title, "Zhang Xuefeng, exam tutor turned influencer, dies at 41");
 });
 

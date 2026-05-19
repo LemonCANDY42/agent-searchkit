@@ -128,7 +128,7 @@ search:
       "args": [
         "-y",
         "--package",
-        "agent-searchkit@0.3.28",
+        "agent-searchkit@0.3.30",
         "agent-searchkit-mcp"
       ],
       "env": {
@@ -225,15 +225,15 @@ CLI 详情见 [skills/standalone.md](./skills/standalone.md)。
 
 ```json
 {
-  "query": "马斯克 最近 动向 新闻",
-  "language": "zh-CN",
-  "rerankVersion": "v1.0",
+  "query": "Elon Musk recent news",
+  "language": "en-US",
+  "rerankVersion": "v1.4",
   "llmRerankHint": "Treat these as retrieval candidates...",
   "results": [
     {
       "rank": 1,
-      "title": "埃隆·马斯克_百度百科",
-      "url": "https://baike.baidu.com/item/...",
+      "title": "Elon Musk latest news",
+      "url": "https://example.com/...",
       "snippet": "...",
       "host": "baike.baidu.com"
     }
@@ -281,16 +281,21 @@ See [Agent Searchkit MCP setup](./skills/mcp.md).
 
 ---
 
-## 🇨🇳 中文搜索行为
+## 🌐 查询语言
 
-SearXNG/Bing 对 `马斯克 最近 动向 新闻` 或 `马斯克最近动向新闻` 这类中文多关键词，可能退化到 `马` 这种单字结果。
+SearXNG 的 Bing 后端并不等同于浏览器里的 `cn.bing.com` 交互式搜索。`张雪峰 最近动向` 这类中文自然语言 query，即使在 Bing 网页能正常工作，也可能在 SearXNG 后端退化。
 
-agent-searchkit 对 CJK 查询会：
+MCP 使用时，所有非英文搜索请求都应先翻译成完整英文 query，再调用 `web_searchkit_search`。例如：
 
-- 如果中文 query 被传成 `en-US`，自动改为 `zh-CN`；
-- 对常见新闻修饰词抽核心实体，例如 `马斯克 最近 动向 新闻` -> `马斯克`；
-- 显式传 curated engines：`bing,bing news,wikipedia`；
-- 保留 SearXNG 候选顺序，把最终语义重排交给调用方 LLM。
+```json
+{
+  "query": "Zhang Xuefeng recent news",
+  "category": "news",
+  "language": "en-US"
+}
+```
+
+agent-searchkit 随后使用正常的 `v1.4` retrieval/rerank 路径，并返回带 citation metadata 的候选结果。调用方 LLM 仍负责最终语义筛选和答案排序。
 
 ---
 
@@ -302,7 +307,7 @@ agent-searchkit 对 CJK 查询会：
 | `defaultLanguage` | `zh-CN` | 默认搜索语言 |
 | `defaultEngines` | `["bing", "bing news", "wikipedia"]` | 显式传给 SearXNG 的 engines |
 | `defaultLimit` | `8` | 每次查询结果数 |
-| `rerankEnabled` | `true` | 非 CJK 查询启用启发式 rerank |
+| `rerankEnabled` | `true` | 启用启发式 rerank |
 | `defaultRerankVersion` | `v1.4` | 默认启发式 rerank 版本 |
 | `defaultMode` | `auto` | 默认搜索模式 |
 

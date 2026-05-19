@@ -128,7 +128,7 @@ The default service helper starts only SearXNG. Optional helper services such as
       "args": [
         "-y",
         "--package",
-        "agent-searchkit@0.3.28",
+        "agent-searchkit@0.3.30",
         "agent-searchkit-mcp"
       ],
       "env": {
@@ -225,15 +225,15 @@ For CLI details, link to [skills/standalone.md](./skills/standalone.md).
 
 ```json
 {
-  "query": "马斯克 最近 动向 新闻",
-  "language": "zh-CN",
-  "rerankVersion": "v1.0",
+  "query": "Elon Musk recent news",
+  "language": "en-US",
+  "rerankVersion": "v1.4",
   "llmRerankHint": "Treat these as retrieval candidates...",
   "results": [
     {
       "rank": 1,
-      "title": "埃隆·马斯克_百度百科",
-      "url": "https://baike.baidu.com/item/...",
+      "title": "Elon Musk latest news",
+      "url": "https://example.com/...",
       "snippet": "...",
       "host": "baike.baidu.com"
     }
@@ -281,16 +281,21 @@ See [Agent Searchkit MCP setup](./skills/mcp.md).
 
 ---
 
-## 🇨🇳 Chinese Search Behavior
+## 🌐 Query Language
 
-SearXNG/Bing can degrade Chinese multi-keyword phrases such as `马斯克 最近 动向 新闻` or `马斯克最近动向新闻` into single-character matches like `马`.
+SearXNG's Bing backend is not equivalent to the interactive `cn.bing.com` browser experience. Chinese natural-language phrases such as `张雪峰 最近动向` can degrade inside SearXNG even when the same phrase works in Bing's web UI.
 
-agent-searchkit handles CJK queries by:
+For MCP usage, translate every non-English user search request into a complete English query before calling `web_searchkit_search`. For example:
 
-- forcing `zh-CN` when a Chinese query is sent with `en-US`;
-- extracting the core entity for common news-like modifiers, for example `马斯克 最近 动向 新闻` -> `马斯克`;
-- explicitly passing curated engines: `bing,bing news,wikipedia`;
-- preserving SearXNG candidate order and leaving final semantic reranking to the calling LLM.
+```json
+{
+  "query": "Zhang Xuefeng recent news",
+  "category": "news",
+  "language": "en-US"
+}
+```
+
+agent-searchkit then uses the normal `v1.4` retrieval/rerank path and returns candidates with citation metadata. The calling LLM still performs the final semantic filtering and answer ordering.
 
 ---
 
@@ -302,7 +307,7 @@ agent-searchkit handles CJK queries by:
 | `defaultLanguage` | `zh-CN` | Default search language |
 | `defaultEngines` | `["bing", "bing news", "wikipedia"]` | SearXNG engines passed explicitly |
 | `defaultLimit` | `8` | Results per query |
-| `rerankEnabled` | `true` | Enable heuristic reranking for non-CJK queries |
+| `rerankEnabled` | `true` | Enable heuristic reranking |
 | `defaultRerankVersion` | `v1.4` | Default heuristic rerank version |
 | `defaultMode` | `auto` | Default search mode |
 

@@ -69,12 +69,12 @@ function errorResult(id, code, message) {
 const tools = [
   {
     name: 'web_searchkit_search',
-    description: 'Search local SearXNG through agent-searchkit and return normalized JSON results.',
+    description: 'Search local SearXNG through agent-searchkit and return normalized JSON results. Translate every non-English user search request into a complete English query before calling this tool.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
       properties: {
-        query: { type: 'string', description: 'Search query.' },
+        query: { type: 'string', description: 'Complete English search query. If the user request is not English, translate it to English first before calling.' },
         limit: { type: 'number', minimum: 1, maximum: 20, description: 'Maximum results to return.' },
         count: { type: 'number', minimum: 1, maximum: 20, description: 'Alias for limit.' },
         category: { type: 'string', description: 'SearXNG category such as general, news, images, videos, it.' },

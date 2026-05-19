@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.30 (2026-05-19)
+
+### Changed
+
+- Restore the normal `v1.4` rerank path for all queries instead of forcing CJK/romanized Chinese searches to raw SearXNG `v1.0` order.
+- Update MCP tool descriptions and docs to require translating every non-English user search request into a complete English query before calling `web_searchkit_search`.
+
 ## 0.3.29 (2026-05-19)
 
 ### Fixed
