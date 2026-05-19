@@ -33,9 +33,26 @@ function Read-LocalEnv {
 }
 
 function Invoke-Compose {
-  param([string[]] $ComposeArgs)
+  param(
+    [string[]] $ComposeArgs,
+    [switch] $Extras
+  )
   Ensure-EnvFile
-  & docker compose --project-name openclaw-agent-searchkit --env-file $EnvFile -f $ComposeFile @ComposeArgs
+  $previousProfiles = [Environment]::GetEnvironmentVariable("COMPOSE_PROFILES", "Process")
+  try {
+    if ($Extras) {
+      $env:COMPOSE_PROFILES = "extras"
+    } else {
+      Remove-Item Env:COMPOSE_PROFILES -ErrorAction SilentlyContinue
+    }
+    & docker compose --project-name openclaw-agent-searchkit --env-file $EnvFile -f $ComposeFile @ComposeArgs
+  } finally {
+    if ($null -eq $previousProfiles) {
+      Remove-Item Env:COMPOSE_PROFILES -ErrorAction SilentlyContinue
+    } else {
+      $env:COMPOSE_PROFILES = $previousProfiles
+    }
+  }
 }
 
 function Wait-ForSearxng {
@@ -89,12 +106,21 @@ switch ($Command) {
     Invoke-Compose @("up", "-d", "--remove-orphans")
     Wait-ForSearxng
   }
+  "up-extras" {
+    Invoke-Compose @("up", "-d", "--remove-orphans") -Extras
+    Wait-ForSearxng
+  }
   "down" {
     Invoke-Compose @("down", "--remove-orphans")
   }
   "restart" {
     Invoke-Compose @("down", "--remove-orphans")
     Invoke-Compose @("up", "-d", "--remove-orphans")
+    Wait-ForSearxng
+  }
+  "restart-extras" {
+    Invoke-Compose @("down", "--remove-orphans") -Extras
+    Invoke-Compose @("up", "-d", "--remove-orphans") -Extras
     Wait-ForSearxng
   }
   { $_ -in @("ps", "status") } {
@@ -105,6 +131,9 @@ switch ($Command) {
   }
   "pull" {
     Invoke-Compose @("pull")
+  }
+  "pull-extras" {
+    Invoke-Compose @("pull") -Extras
   }
   "test" {
     Test-Services
@@ -117,10 +146,10 @@ switch ($Command) {
     $port = if ($vars["SEARXNG_PORT"]) { $vars["SEARXNG_PORT"] } else { "8888" }
     $ntfyPort = if ($vars["NTFY_PORT"]) { $vars["NTFY_PORT"] } else { "18082" }
     Write-Host "SearXNG : http://127.0.0.1:$port"
-    Write-Host "ntfy    : http://127.0.0.1:$ntfyPort (optional: COMPOSE_PROFILES=extras)"
+    Write-Host "ntfy    : http://127.0.0.1:$ntfyPort (optional: .\manage.ps1 up-extras)"
   }
   default {
-    Write-Host "Usage: .\manage.ps1 {up|down|restart|ps|status|logs|pull|test|wait|urls}"
+    Write-Host "Usage: .\manage.ps1 {up|up-extras|down|restart|restart-extras|ps|status|logs|pull|pull-extras|test|wait|urls}"
     exit 1
   }
 }

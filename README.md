@@ -90,7 +90,7 @@ That direct file mount prevents SearXNG from silently generating a default `sett
 
 Do not replace the bundled file with a minimal `use_default_settings: true` config for MCP usage. The SearXNG default engine set includes engines such as `radio browser` that are unrelated to web search and can fail during startup on fresh Docker caches. The bundled settings keep the engine list focused on web/news/package search and avoid that startup noise.
 
-The default service bootstrap starts only SearXNG. Optional helper services such as Valkey and ntfy are behind the `extras` Compose profile so the MCP quickstart does not fail because of unrelated image pulls.
+The default service bootstrap starts only SearXNG. Optional helper services such as Valkey and ntfy are behind explicit `up-extras` / `restart-extras` commands so the MCP quickstart does not fail because of unrelated image pulls. The scripts intentionally ignore an inherited `COMPOSE_PROFILES=extras` value for the default `up` command.
 
 If you already have SearXNG, for example OpenClaw's local service at `http://127.0.0.1:18080`, you can reuse it as long as its JSON search endpoint passes the same verification command.
 

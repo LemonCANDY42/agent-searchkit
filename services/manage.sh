@@ -15,6 +15,14 @@ if [[ ! -f "$ENV_FILE" ]]; then
   fi
 fi
 
+compose_default() {
+  COMPOSE_PROFILES= "${COMPOSE[@]}" "$@"
+}
+
+compose_extras() {
+  COMPOSE_PROFILES=extras "${COMPOSE[@]}" "$@"
+}
+
 wait_for_searxng() {
   source "$ENV_FILE"
   local url="http://127.0.0.1:${SEARXNG_PORT}/search?q=openclaw&format=json&language=en-US"
@@ -34,26 +42,38 @@ wait_for_searxng() {
 
 case "${1:-}" in
   up)
-    "${COMPOSE[@]}" up -d --remove-orphans
+    compose_default up -d --remove-orphans
+    wait_for_searxng
+    ;;
+  up-extras)
+    compose_extras up -d --remove-orphans
     wait_for_searxng
     ;;
   down)
-    "${COMPOSE[@]}" down --remove-orphans
+    compose_default down --remove-orphans
     ;;
   restart)
-    "${COMPOSE[@]}" down --remove-orphans
-    "${COMPOSE[@]}" up -d --remove-orphans
+    compose_default down --remove-orphans
+    compose_default up -d --remove-orphans
+    wait_for_searxng
+    ;;
+  restart-extras)
+    compose_extras down --remove-orphans
+    compose_extras up -d --remove-orphans
     wait_for_searxng
     ;;
   ps|status)
-    "${COMPOSE[@]}" ps
+    compose_default ps
     ;;
   logs)
     shift || true
-    "${COMPOSE[@]}" logs -f "${@:-}"
+    compose_default logs -f "${@:-}"
     ;;
   pull)
-    "${COMPOSE[@]}" pull
+    compose_default pull
+    ;;
+  pull-extras)
+    compose_extras pull
     ;;
   test)
     "$ROOT/smoke-test.sh"
@@ -65,11 +85,11 @@ case "${1:-}" in
     source "$ENV_FILE"
     cat <<EOF
 SearXNG : http://127.0.0.1:${SEARXNG_PORT}
-ntfy    : http://127.0.0.1:${NTFY_PORT} (optional: COMPOSE_PROFILES=extras)
+ntfy    : http://127.0.0.1:${NTFY_PORT} (optional: ./manage.sh up-extras)
 EOF
     ;;
   *)
-    echo "Usage: $0 {up|down|restart|ps|status|logs|pull|test|wait|urls}"
+    echo "Usage: $0 {up|up-extras|down|restart|restart-extras|ps|status|logs|pull|pull-extras|test|wait|urls}"
     exit 1
     ;;
 esac

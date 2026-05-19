@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.14 (2026-05-19)
+
+### Fixed
+
+- Make service helpers ignore inherited `COMPOSE_PROFILES=extras` for default startup, keeping Valkey and ntfy out of the MCP quickstart unless users explicitly run `up-extras`.
+
 ## 0.3.13 (2026-05-19)
 
 ### Fixed
