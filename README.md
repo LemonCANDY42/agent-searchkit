@@ -147,7 +147,7 @@ openclaw gateway restart
 }
 ```
 
-需要完全可复现时，把 `agent-searchkit@latest` 固定为当前版本，例如 `agent-searchkit@0.3.18`。
+需要完全可复现时，把 `agent-searchkit@latest` 固定为当前版本，例如 `agent-searchkit@0.3.20`。
 
 **Windows 如果已全局安装成功：**
 
@@ -392,7 +392,9 @@ Standard config without a prior global install:
 }
 ```
 
-For reproducible deployments, pin `agent-searchkit@latest` to a concrete version such as `agent-searchkit@0.3.18`.
+For reproducible deployments, pin `agent-searchkit@latest` to a concrete version such as `agent-searchkit@0.3.20`.
+
+If LM Studio / OpenClaw reports `MCP error -32001: Request timed out` during startup while the SearXNG JSON endpoint is healthy, use `agent-searchkit >= 0.3.20`. Older MCP builds only handled standard `Content-Length` stdio frames; 0.3.20 also accepts JSON-lines initialize frames used by some bridges.
 
 If the package is installed globally, this shorter config is also valid:
 

@@ -5,6 +5,7 @@
 ### Fixed
 
 - Make the MCP stdio server tolerate JSON-lines initialize frames in addition to standard `Content-Length` MCP frames, improving compatibility with bridge implementations that do not frame stdio exactly like the reference SDK.
+- Document that LM Studio / OpenClaw bridge startup timeouts with healthy SearXNG are fixed by using `agent-searchkit >= 0.3.20`.
 
 ## 0.3.19 (2026-05-19)
 

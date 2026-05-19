@@ -19,7 +19,7 @@ Standard MCP use does not require a prior global install:
 npx -y --package agent-searchkit@latest agent-searchkit-mcp --help
 ```
 
-For reproducible deployments, pin `agent-searchkit@latest` to a concrete version such as `agent-searchkit@0.3.18`.
+For reproducible deployments, pin `agent-searchkit@latest` to a concrete version such as `agent-searchkit@0.3.20`.
 
 If npm/npx bin shims are unreliable on Windows, either install globally:
 
@@ -123,4 +123,5 @@ web_searchkit_search(query="Redis vs Valkey benchmark", category="it")
 
 - **No tools appear:** Check the path in your MCP config is correct
 - **SearXNG errors:** Ensure SearXNG is running: `curl http://127.0.0.1:8888/search?q=test&format=json`
+- **Bridge startup timeout:** Use `agent-searchkit >= 0.3.20`; it supports both standard `Content-Length` MCP stdio frames and JSON-lines initialize frames used by some bridges.
 - **Timeout:** Increase `fetchTimeoutMs` in the tool call parameters
