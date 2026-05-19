@@ -916,12 +916,57 @@ function normalizeSearchLanguageForQuery(language: string, query: string) {
 const ENGLISH_QUERY_REQUIRED_MESSAGE =
   "agent-searchkit requires MCP search queries in English. Translate the user's search request into a complete English query, set language to en-US or omit it, then retry. Example: '张雪峰 最近动向' -> 'Zhang Xuefeng recent news'.";
 
+const ROMANIZED_CHINESE_SURNAMES = new Set([
+  "ai", "an", "bai", "bao", "bi", "cai", "cao", "chang", "chen", "cheng", "chi", "cui",
+  "dai", "deng", "ding", "dong", "du", "duan", "fan", "fang", "feng", "fu", "gao", "gong",
+  "gu", "guan", "guo", "han", "hao", "he", "hong", "hou", "hu", "hua", "huang", "jia",
+  "jiang", "jin", "kang", "kong", "lei", "li", "lian", "liang", "liao", "lin", "liu",
+  "long", "lu", "luo", "ma", "meng", "mo", "niu", "pan", "peng", "qi", "qian", "qin",
+  "qiu", "ren", "shao", "shen", "shi", "song", "su", "sun", "tan", "tang", "tao", "tian",
+  "wan", "wang", "wei", "wen", "wu", "xia", "xiang", "xiao", "xie", "xin", "xing", "xu",
+  "xue", "yan", "yang", "yao", "ye", "yi", "yin", "yu", "yuan", "zeng", "zhang", "zhao",
+  "zheng", "zhong", "zhou", "zhu", "zhuang", "zou",
+]);
+const ROMANIZED_CHINESE_COMPOUND_SURNAMES = new Set(["ouyang", "sima", "shangguan", "situ", "zhuge"]);
+const ROMANIZED_NAME_ORG_HINTS = new Set([
+  "ai", "auto", "bank", "capital", "cloud", "group", "holdings", "media", "motors", "news",
+  "official", "tech", "technology", "university",
+]);
+
+function looksLikeRomanizedChineseNameToken(token: string) {
+  return /^[A-Z][a-z]{1,24}$/.test(token);
+}
+
+function specializeRomanizedChineseNameQuery(input: string) {
+  const parts = input.trim().split(/\s+/g).filter(Boolean);
+  if (parts.length < 3 || /[^\x00-\x7F]/.test(input)) {
+    return input.trim();
+  }
+  const first = parts[0].toLowerCase();
+  const second = parts[1].toLowerCase();
+  if (
+    (ROMANIZED_CHINESE_SURNAMES.has(first) || ROMANIZED_CHINESE_COMPOUND_SURNAMES.has(first)) &&
+    looksLikeRomanizedChineseNameToken(parts[0]) &&
+    looksLikeRomanizedChineseNameToken(parts[1]) &&
+    !ROMANIZED_NAME_ORG_HINTS.has(second)
+  ) {
+    return [`${parts[0]}${parts[1]}`, ...parts.slice(2)].join(" ");
+  }
+  return input.trim();
+}
+
 function assertEnglishSearchToolInput(params: Record<string, unknown>) {
   const query = typeof params.query === "string" ? params.query.trim() : "";
   const language = typeof params.language === "string" ? params.language.trim().toLowerCase() : "";
   if (/[^\x00-\x7F]/.test(query) || (language && !language.startsWith("en"))) {
     throw new Error(ENGLISH_QUERY_REQUIRED_MESSAGE);
   }
+}
+
+function normalizeEnglishSearchToolInput(params: Record<string, unknown>) {
+  assertEnglishSearchToolInput(params);
+  const query = typeof params.query === "string" ? specializeRomanizedChineseNameQuery(params.query) : "";
+  return { ...params, query };
 }
 
 function normalizeSearxngEngines(input: unknown) {
@@ -5553,8 +5598,7 @@ async function detectLegacyContainers() {
 }
 
 export async function runAgentSearchkitSearch(cfg: Record<string, unknown>, params: Record<string, unknown>) {
-  assertEnglishSearchToolInput(params);
-  return await searchSearxng(cfg, params as any);
+  return await searchSearxng(cfg, normalizeEnglishSearchToolInput(params) as any);
 }
 
 const plugin = {
@@ -5701,7 +5745,7 @@ const plugin = {
         required: ["query"],
       },
       async execute(_id: string, params: Record<string, unknown>) {
-        assertEnglishSearchToolInput(params);
+        params = normalizeEnglishSearchToolInput(params);
         const cfg = resolvePluginCfg(api);
         const result = await searchSearxng(cfg, {
           query: String(params.query ?? ""),
@@ -5750,7 +5794,7 @@ const plugin = {
         required: ["query"],
       },
       async execute(_id: string, params: Record<string, unknown>) {
-        assertEnglishSearchToolInput(params);
+        params = normalizeEnglishSearchToolInput(params);
         const cfg = resolvePluginCfg(api);
         const query = String(params.query ?? "").trim();
         const result = await searchSearxng(cfg, {
@@ -5905,7 +5949,7 @@ const plugin = {
           required: ["query"],
         },
         execute: async (args: Record<string, unknown>) => {
-          assertEnglishSearchToolInput(args);
+          args = normalizeEnglishSearchToolInput(args);
           const cfg = resolvePluginCfg(api);
           const limit = typeof args.count === "number" ? Math.min(20, Math.max(1, args.count)) : cfg.defaultLimit;
           const language = typeof args.language === "string" ? args.language : cfg.defaultLanguage;

@@ -128,7 +128,7 @@ The default service helper starts only SearXNG. Optional helper services such as
       "args": [
         "-y",
         "--package",
-        "agent-searchkit@0.3.31",
+        "agent-searchkit@0.3.32",
         "agent-searchkit-mcp"
       ],
       "env": {
@@ -298,6 +298,8 @@ For MCP usage, translate every non-English user search request into a complete E
 agent-searchkit then uses the normal `v1.4` retrieval/rerank path and returns candidates with citation metadata. The calling LLM still performs the final semantic filtering and answer ordering.
 
 This is enforced at runtime for MCP calls: obvious non-English query text or non-English `language` hints are rejected with a retryable instruction to translate first.
+
+Likely romanized Chinese personal names are specialized by joining surname and given name before retrieval. For example, `Zhang Xuefeng recent news activities` is sent to SearXNG as `ZhangXuefeng recent news activities`.
 
 ---
 

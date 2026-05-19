@@ -325,6 +325,80 @@ test("English queries are sent to SearXNG unchanged", async () => {
   }
 });
 
+test("MCP search contract specializes romanized Chinese names by joining surname and given name", async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    calls.push(new URL(String(url)));
+    return {
+      ok: true,
+      json: async () => ({ results: [] }),
+    };
+  };
+
+  try {
+    const result = await runAgentSearchkitSearch(
+      {
+        searxngBaseUrl: "http://127.0.0.1:8888",
+        defaultLanguage: "en-US",
+        defaultLimit: 5,
+        defaultMode: "auto",
+        defaultRerankVersion: "v1.4",
+        rerankEnabled: true,
+        fetchTimeoutMs: 1000,
+      },
+      {
+        query: "Zhang Xuefeng recent news activities",
+        category: "news",
+        language: "en-US",
+        limit: 1,
+        debug: true,
+      },
+    );
+
+    assert.equal(result.query, "ZhangXuefeng recent news activities");
+    assert.equal(calls[0].searchParams.get("q"), "ZhangXuefeng recent news activities");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("MCP search contract does not join common organization-like names", async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    calls.push(new URL(String(url)));
+    return {
+      ok: true,
+      json: async () => ({ results: [] }),
+    };
+  };
+
+  try {
+    await runAgentSearchkitSearch(
+      {
+        searxngBaseUrl: "http://127.0.0.1:8888",
+        defaultLanguage: "en-US",
+        defaultLimit: 5,
+        defaultMode: "auto",
+        defaultRerankVersion: "v1.4",
+        rerankEnabled: true,
+        fetchTimeoutMs: 1000,
+      },
+      {
+        query: "Li Auto recent news",
+        category: "news",
+        language: "en-US",
+        limit: 1,
+      },
+    );
+
+    assert.equal(calls[0].searchParams.get("q"), "Li Auto recent news");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("MCP search contract rejects non-English query input", async () => {
   await assert.rejects(
     () => runAgentSearchkitSearch(

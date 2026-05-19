@@ -22,7 +22,7 @@ function normalizeSearxngBaseUrl(value) {
 async function runSearch(args) {
   const query = String(args?.query || '').trim();
   if (!query) throw new Error('query is required');
-  assertEnglishSearchToolInput(args || {});
+  args = normalizeEnglishSearchToolInput(args || {});
   const { runAgentSearchkitSearch } = await loadPluginModule();
   if (typeof runAgentSearchkitSearch !== 'function') throw new Error('dist/index.js does not export runAgentSearchkitSearch; run npm run build');
   return await runAgentSearchkitSearch({
@@ -39,7 +39,7 @@ async function runSearch(args) {
     ntfyBaseUrl: process.env.NTFY_BASE_URL || 'http://127.0.0.1:18082',
     embeddingModelPath: process.env.EMBEDDING_MODEL_PATH,
   }, {
-    query,
+    query: args.query,
     limit: typeof args?.limit === 'number' ? args.limit : typeof args?.count === 'number' ? args.count : undefined,
     category: typeof args?.category === 'string' ? args.category : undefined,
     language: typeof args?.language === 'string' ? args.language : undefined,
@@ -52,6 +52,22 @@ async function runSearch(args) {
 
 const ENGLISH_QUERY_REQUIRED_MESSAGE =
   "agent-searchkit requires MCP search queries in English. Translate the user's search request into a complete English query, set language to en-US or omit it, then retry. Example: '张雪峰 最近动向' -> 'Zhang Xuefeng recent news'.";
+const ROMANIZED_CHINESE_SURNAMES = new Set([
+  'ai', 'an', 'bai', 'bao', 'bi', 'cai', 'cao', 'chang', 'chen', 'cheng', 'chi', 'cui',
+  'dai', 'deng', 'ding', 'dong', 'du', 'duan', 'fan', 'fang', 'feng', 'fu', 'gao', 'gong',
+  'gu', 'guan', 'guo', 'han', 'hao', 'he', 'hong', 'hou', 'hu', 'hua', 'huang', 'jia',
+  'jiang', 'jin', 'kang', 'kong', 'lei', 'li', 'lian', 'liang', 'liao', 'lin', 'liu',
+  'long', 'lu', 'luo', 'ma', 'meng', 'mo', 'niu', 'pan', 'peng', 'qi', 'qian', 'qin',
+  'qiu', 'ren', 'shao', 'shen', 'shi', 'song', 'su', 'sun', 'tan', 'tang', 'tao', 'tian',
+  'wan', 'wang', 'wei', 'wen', 'wu', 'xia', 'xiang', 'xiao', 'xie', 'xin', 'xing', 'xu',
+  'xue', 'yan', 'yang', 'yao', 'ye', 'yi', 'yin', 'yu', 'yuan', 'zeng', 'zhang', 'zhao',
+  'zheng', 'zhong', 'zhou', 'zhu', 'zhuang', 'zou',
+]);
+const ROMANIZED_CHINESE_COMPOUND_SURNAMES = new Set(['ouyang', 'sima', 'shangguan', 'situ', 'zhuge']);
+const ROMANIZED_NAME_ORG_HINTS = new Set([
+  'ai', 'auto', 'bank', 'capital', 'cloud', 'group', 'holdings', 'media', 'motors', 'news',
+  'official', 'tech', 'technology', 'university',
+]);
 
 function assertEnglishSearchToolInput(args) {
   const query = String(args?.query || '').trim();
@@ -59,6 +75,27 @@ function assertEnglishSearchToolInput(args) {
   if (/[^\x00-\x7F]/.test(query) || (language && !language.startsWith('en'))) {
     throw new Error(ENGLISH_QUERY_REQUIRED_MESSAGE);
   }
+}
+
+function specializeRomanizedChineseNameQuery(input) {
+  const parts = input.trim().split(/\s+/g).filter(Boolean);
+  if (parts.length < 3 || /[^\x00-\x7F]/.test(input)) return input.trim();
+  const first = parts[0].toLowerCase();
+  const second = parts[1].toLowerCase();
+  if (
+    (ROMANIZED_CHINESE_SURNAMES.has(first) || ROMANIZED_CHINESE_COMPOUND_SURNAMES.has(first)) &&
+    /^[A-Z][a-z]{1,24}$/.test(parts[0]) &&
+    /^[A-Z][a-z]{1,24}$/.test(parts[1]) &&
+    !ROMANIZED_NAME_ORG_HINTS.has(second)
+  ) {
+    return [`${parts[0]}${parts[1]}`, ...parts.slice(2)].join(' ');
+  }
+  return input.trim();
+}
+
+function normalizeEnglishSearchToolInput(args) {
+  assertEnglishSearchToolInput(args);
+  return { ...args, query: specializeRomanizedChineseNameQuery(String(args?.query || '')) };
 }
 
 function writeMessage(message) {

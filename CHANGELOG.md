@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.32 (2026-05-19)
+
+### Changed
+
+- Specialize likely romanized Chinese personal names before MCP search by joining surname and given name, for example `Zhang Xuefeng recent news activities` -> `ZhangXuefeng recent news activities`, while avoiding common organization-like names such as `Li Auto`.
+
 ## 0.3.31 (2026-05-19)
 
 ### Changed
