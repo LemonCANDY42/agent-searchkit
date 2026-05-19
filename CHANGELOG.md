@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.17 (2026-05-19)
+
+### Fixed
+
+- Send local proxy IP headers to SearXNG requests so local MCP searches do not trigger noisy botdetection logs about missing `X-Forwarded-For` / `X-Real-IP`.
+
 ## 0.3.16 (2026-05-19)
 
 ### Fixed

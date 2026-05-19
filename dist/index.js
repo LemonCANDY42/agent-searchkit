@@ -1989,6 +1989,8 @@ async function fetchWithTimeout(url, opts = {}) {
     const res = await fetch(url, {
       headers: {
         "user-agent": "OpenClaw agent-searchkit plugin",
+        "x-forwarded-for": "127.0.0.1",
+        "x-real-ip": "127.0.0.1",
         ...opts.headers ?? {}
       },
       signal: controller.signal
