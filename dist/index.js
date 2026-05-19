@@ -3668,6 +3668,7 @@ async function searchSearxng(cfg, params) {
     rerankVersion: effectiveRerankVersion,
     requestedRerankVersion: resolveRequestedRerankVersion(params.rerankVersion) ?? null,
     rerankStrategy: rerankStrategyLabel(effectiveRerankVersion),
+    llmRerankHint: "Treat these as retrieval candidates. For final answers, the calling LLM should select, group, and reorder results using the user intent, title, snippet, host, publishedDate, and citation fields; do not treat rank as a final answer order.",
     queryIntent: {
       docsLike: intent.docsLike,
       githubLike: intent.githubLike,
@@ -4072,7 +4073,7 @@ var plugin = {
     });
     api.registerTool({
       name: "web_searchkit_search",
-      description: "Search the local SearXNG research stack and return normalized web results with engine-health hints plus mode-aware reranking.",
+      description: "Search the local SearXNG research stack and return normalized retrieval candidates with citations and engine-health hints. The calling LLM should perform final semantic filtering/reranking before answering.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -4175,6 +4176,7 @@ var plugin = {
           mode: result.mode,
           rerankApplied: result.rerankApplied,
           rerankStrategy: result.rerankStrategy,
+          llmRerankHint: result.llmRerankHint,
           queryIntent: result.queryIntent,
           retrieval: result.retrieval,
           resultCount: result.resultCount,

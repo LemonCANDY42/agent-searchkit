@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.25 (2026-05-19)
+
+### Changed
+
+- Clarify in tool output and docs that `agent-searchkit` returns retrieval candidates, while the calling LLM should perform final semantic filtering and reranking before answering.
+
 ## 0.3.24 (2026-05-19)
 
 ### Fixed
