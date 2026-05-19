@@ -59,11 +59,20 @@ child.stdin.write(encode({
 }));
 child.stdin.write(encode({ jsonrpc: '2.0', method: 'notifications/initialized', params: {} }));
 child.stdin.write(encode({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }));
+child.stdin.write(encode({
+  jsonrpc: '2.0',
+  id: 3,
+  method: 'tools/call',
+  params: {
+    name: 'web_searchkit_search',
+    arguments: { query: '张雪峰 最近动向', category: 'news', language: 'zh-CN' },
+  },
+}));
 
 await new Promise((resolve, reject) => {
   const timeout = setTimeout(() => reject(new Error(`timed out waiting for MCP responses. stderr=${stderr}`)), 3000);
   const interval = setInterval(() => {
-    if (responses.some((item) => item.id === 1) && responses.some((item) => item.id === 2)) {
+    if (responses.some((item) => item.id === 1) && responses.some((item) => item.id === 2) && responses.some((item) => item.id === 3)) {
       clearInterval(interval);
       clearTimeout(timeout);
       resolve();
@@ -79,6 +88,8 @@ assert.equal(init.result.serverInfo.version, packageJson.version);
 
 const tools = responses.find((item) => item.id === 2).result.tools;
 assert.ok(tools.some((tool) => tool.name === 'web_searchkit_search'));
+const rejectedSearch = responses.find((item) => item.id === 3);
+assert.match(rejectedSearch.error.message, /requires MCP search queries in English/);
 console.log('MCP smoke test passed');
 
 const lineChild = spawn(process.execPath, [serverPath], { stdio: ['pipe', 'pipe', 'pipe'] });

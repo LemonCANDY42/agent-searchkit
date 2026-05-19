@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import manifest from "../openclaw.plugin.json" with { type: "json" };
 
-import plugin, { __test } from "./index.ts";
+import plugin, { __test, runAgentSearchkitSearch } from "./index.ts";
 
 function makeResult(overrides = {}) {
   return {
@@ -323,6 +323,28 @@ test("English queries are sent to SearXNG unchanged", async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("MCP search contract rejects non-English query input", async () => {
+  await assert.rejects(
+    () => runAgentSearchkitSearch(
+      {
+        searxngBaseUrl: "http://127.0.0.1:8888",
+        defaultLanguage: "en-US",
+        defaultLimit: 5,
+        defaultMode: "auto",
+        defaultRerankVersion: "v1.4",
+        rerankEnabled: true,
+        fetchTimeoutMs: 1000,
+      },
+      {
+        query: "张雪峰 最近动向",
+        category: "news",
+        language: "zh-CN",
+      },
+    ),
+    /requires MCP search queries in English/,
+  );
 });
 
 test("English Chinese-name searches use normal reranking", async () => {

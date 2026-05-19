@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.31 (2026-05-19)
+
+### Changed
+
+- Enforce the MCP English-query contract at runtime: non-ASCII queries or non-English language hints are rejected with a retryable instruction to translate the search request into English first.
+
 ## 0.3.30 (2026-05-19)
 
 ### Changed

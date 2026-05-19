@@ -913,6 +913,17 @@ function normalizeSearchLanguageForQuery(language: string, query: string) {
   return language;
 }
 
+const ENGLISH_QUERY_REQUIRED_MESSAGE =
+  "agent-searchkit requires MCP search queries in English. Translate the user's search request into a complete English query, set language to en-US or omit it, then retry. Example: '张雪峰 最近动向' -> 'Zhang Xuefeng recent news'.";
+
+function assertEnglishSearchToolInput(params: Record<string, unknown>) {
+  const query = typeof params.query === "string" ? params.query.trim() : "";
+  const language = typeof params.language === "string" ? params.language.trim().toLowerCase() : "";
+  if (/[^\x00-\x7F]/.test(query) || (language && !language.startsWith("en"))) {
+    throw new Error(ENGLISH_QUERY_REQUIRED_MESSAGE);
+  }
+}
+
 function normalizeSearxngEngines(input: unknown) {
   if (Array.isArray(input)) {
     return input.map((engine) => typeof engine === "string" ? engine.trim() : "").filter(Boolean);
@@ -5542,6 +5553,7 @@ async function detectLegacyContainers() {
 }
 
 export async function runAgentSearchkitSearch(cfg: Record<string, unknown>, params: Record<string, unknown>) {
+  assertEnglishSearchToolInput(params);
   return await searchSearxng(cfg, params as any);
 }
 
@@ -5689,6 +5701,7 @@ const plugin = {
         required: ["query"],
       },
       async execute(_id: string, params: Record<string, unknown>) {
+        assertEnglishSearchToolInput(params);
         const cfg = resolvePluginCfg(api);
         const result = await searchSearxng(cfg, {
           query: String(params.query ?? ""),
@@ -5737,6 +5750,7 @@ const plugin = {
         required: ["query"],
       },
       async execute(_id: string, params: Record<string, unknown>) {
+        assertEnglishSearchToolInput(params);
         const cfg = resolvePluginCfg(api);
         const query = String(params.query ?? "").trim();
         const result = await searchSearxng(cfg, {
@@ -5891,6 +5905,7 @@ const plugin = {
           required: ["query"],
         },
         execute: async (args: Record<string, unknown>) => {
+          assertEnglishSearchToolInput(args);
           const cfg = resolvePluginCfg(api);
           const limit = typeof args.count === "number" ? Math.min(20, Math.max(1, args.count)) : cfg.defaultLimit;
           const language = typeof args.language === "string" ? args.language : cfg.defaultLanguage;

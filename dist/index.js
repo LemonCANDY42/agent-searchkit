@@ -649,6 +649,14 @@ function normalizeSearchLanguageForQuery(language, query) {
   }
   return language;
 }
+var ENGLISH_QUERY_REQUIRED_MESSAGE = "agent-searchkit requires MCP search queries in English. Translate the user's search request into a complete English query, set language to en-US or omit it, then retry. Example: '\u5F20\u96EA\u5CF0 \u6700\u8FD1\u52A8\u5411' -> 'Zhang Xuefeng recent news'.";
+function assertEnglishSearchToolInput(params) {
+  const query = typeof params.query === "string" ? params.query.trim() : "";
+  const language = typeof params.language === "string" ? params.language.trim().toLowerCase() : "";
+  if (/[^\x00-\x7F]/.test(query) || language && !language.startsWith("en")) {
+    throw new Error(ENGLISH_QUERY_REQUIRED_MESSAGE);
+  }
+}
 function normalizeSearxngEngines(input) {
   if (Array.isArray(input)) {
     return input.map((engine) => typeof engine === "string" ? engine.trim() : "").filter(Boolean);
@@ -4029,6 +4037,7 @@ async function detectLegacyContainers() {
   }
 }
 async function runAgentSearchkitSearch(cfg, params) {
+  assertEnglishSearchToolInput(params);
   return await searchSearxng(cfg, params);
 }
 var plugin = {
@@ -4170,6 +4179,7 @@ var plugin = {
         required: ["query"]
       },
       async execute(_id, params) {
+        assertEnglishSearchToolInput(params);
         const cfg = resolvePluginCfg(api);
         const result = await searchSearxng(cfg, {
           query: String(params.query ?? ""),
@@ -4217,6 +4227,7 @@ var plugin = {
         required: ["query"]
       },
       async execute(_id, params) {
+        assertEnglishSearchToolInput(params);
         const cfg = resolvePluginCfg(api);
         const query = String(params.query ?? "").trim();
         const result = await searchSearxng(cfg, {
@@ -4362,6 +4373,7 @@ var plugin = {
           required: ["query"]
         },
         execute: async (args) => {
+          assertEnglishSearchToolInput(args);
           const cfg = resolvePluginCfg(api);
           const limit = typeof args.count === "number" ? Math.min(20, Math.max(1, args.count)) : cfg.defaultLimit;
           const language = typeof args.language === "string" ? args.language : cfg.defaultLanguage;

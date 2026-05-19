@@ -22,6 +22,7 @@ function normalizeSearxngBaseUrl(value) {
 async function runSearch(args) {
   const query = String(args?.query || '').trim();
   if (!query) throw new Error('query is required');
+  assertEnglishSearchToolInput(args || {});
   const { runAgentSearchkitSearch } = await loadPluginModule();
   if (typeof runAgentSearchkitSearch !== 'function') throw new Error('dist/index.js does not export runAgentSearchkitSearch; run npm run build');
   return await runAgentSearchkitSearch({
@@ -47,6 +48,17 @@ async function runSearch(args) {
     rerankVersion: typeof args?.rerankVersion === 'string' ? args.rerankVersion : undefined,
     citations: typeof args?.citations === 'boolean' ? args.citations : true,
   });
+}
+
+const ENGLISH_QUERY_REQUIRED_MESSAGE =
+  "agent-searchkit requires MCP search queries in English. Translate the user's search request into a complete English query, set language to en-US or omit it, then retry. Example: '张雪峰 最近动向' -> 'Zhang Xuefeng recent news'.";
+
+function assertEnglishSearchToolInput(args) {
+  const query = String(args?.query || '').trim();
+  const language = typeof args?.language === 'string' ? args.language.trim().toLowerCase() : '';
+  if (/[^\x00-\x7F]/.test(query) || (language && !language.startsWith('en'))) {
+    throw new Error(ENGLISH_QUERY_REQUIRED_MESSAGE);
+  }
 }
 
 function writeMessage(message) {
