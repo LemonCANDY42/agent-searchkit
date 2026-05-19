@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.27 (2026-05-19)
+
+### Changed
+
+- Restore the project-homepage README structure from the earlier 4f5e40e layout while keeping English as the default and adding a matching Chinese page.
+
 ## 0.3.26 (2026-05-19)
 
 ### Changed
